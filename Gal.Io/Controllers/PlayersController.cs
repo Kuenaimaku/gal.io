@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using League_Recorder_Backend.Interfaces;
-using League_Recorder_Backend.Interfaces.DTOs;
+using Gal.Io.Interfaces;
+using Gal.Io.Interfaces.DTOs;
+using Gal.Io.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace League_Recorder_Backend.Controllers
+namespace Gal.Io.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -19,18 +20,20 @@ namespace League_Recorder_Backend.Controllers
         private readonly IConfiguration _config;
         private readonly ILogger<PlayersController> _logger;
         private readonly IRiotService _riotService;
-        public PlayersController(IConfiguration config, ILogger<PlayersController> logger, IRiotService riotService)
+        private readonly IPlayerService _playerService;
+        public PlayersController(IConfiguration config, ILogger<PlayersController> logger, IRiotService riotService, IPlayerService playerService)
         {
             _config = config;
             _logger = logger;
             _riotService = riotService;
+            _playerService = playerService;
         }
 
         // GET api/players
         [HttpGet]
-        public ActionResult<IEnumerable<SummonerDTO>> Get()
+        public ActionResult<IEnumerable<PlayerDTO>> Get()
         {
-            var response = _riotService.GetSummonerByName("Kuenaimaku");
+            var response = _playerService.FetchPlayers();
             return Ok(JsonConvert.SerializeObject(response));
         }
 
@@ -41,22 +44,35 @@ namespace League_Recorder_Backend.Controllers
             return Ok(JsonConvert.SerializeObject(response));
         }
 
-        // POST api/values
-        [HttpPost]
-        public void Post([FromBody] string value)
+        // PATCH api/players
+        [HttpPatch]
+        public PlayerDTO Patch([FromBody] PlayerDTO player)
         {
+            var response = _playerService.PatchPlayer(player);
+            return response;
         }
 
-        // PUT api/values/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        // PUT api/players
+        [HttpPut]
+        public ActionResult Put([FromBody] PlayerDTO player)
         {
+            var r = _playerService.AddPlayer(player);
+            if (r)
+                return Ok();
+            else
+                return BadRequest();
+
         }
 
-        // DELETE api/values/5
+        // DELETE api/players/guid
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public ActionResult Delete(Guid id)
         {
+            var r = _playerService.RemovePlayer(id);
+            if (r)
+                return Ok();
+            else
+                return BadRequest();
         }
     }
 }

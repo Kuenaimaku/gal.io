@@ -1,5 +1,5 @@
-﻿using League_Recorder_Backend.Interfaces;
-using League_Recorder_Backend.Interfaces.DTOs;
+﻿using Gal.Io.Interfaces;
+using Gal.Io.Interfaces.DTOs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace League_Recorder_Backend.Services
+namespace Gal.Io.Services
 {
     public class RiotService: IRiotService
     {
