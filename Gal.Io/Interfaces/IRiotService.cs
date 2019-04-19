@@ -9,5 +9,6 @@ namespace League_Recorder_Backend.Interfaces
     public interface IRiotService
     {
         SummonerDTO GetSummonerByName(string name);
+        String GetMatchByID(long MatchID);
     }
 }
