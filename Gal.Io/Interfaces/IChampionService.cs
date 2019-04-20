@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace Gal.Io.Interfaces
 {
-    public interface IRiotService
+    public interface IChampionService
     {
-        SummonerDTO GetSummonerByName(string name);
-        MatchDTO GetMatchByID(long MatchID);
+        ChampionDTO GetChampionById(int id);
     }
 }

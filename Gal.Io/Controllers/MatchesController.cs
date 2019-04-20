@@ -34,7 +34,7 @@ namespace League_Recorder_Backend.Controllers
         }
 
         [HttpGet("{MatchID}")]
-        public ActionResult <String> Validate(long MatchID)
+        public ActionResult<MatchDTO> Validate(long MatchID)
         {
             var response = _riotService.GetMatchByID(MatchID);
             return Ok(JsonConvert.SerializeObject(response));

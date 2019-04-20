@@ -25,24 +25,43 @@ namespace Gal.Io.Services
             _riotService = riotService;
         }
 
-        public IEnumerable<PlayerDTO> FetchPlayers()
+        public IEnumerable<PlayerDTO> FetchPlayers(string name)
         {
             try
             {
                 List<PlayerDTO> response = new List<PlayerDTO>();
                 using (var db = new DataContext())
                 {
-                    foreach (var player in db.Players)
+                    if (string.IsNullOrEmpty(name))
                     {
-                        PlayerDTO p = new PlayerDTO()
+                        foreach (var player in db.Players)
                         {
-                            Id = player.Id,
-                            Name = player.Name,
-                            SummonerName = player.SummonerName,
-                            Notes = player.Notes,
-                            SummonerDto = _riotService.GetSummonerByName(player.SummonerName)
-                        };
-                        response.Add(p);
+                            PlayerDTO p = new PlayerDTO()
+                            {
+                                Id = player.Id,
+                                Name = player.Name,
+                                SummonerName = player.SummonerName,
+                                Notes = player.Notes,
+                                SummonerDto = _riotService.GetSummonerByName(player.SummonerName)
+                            };
+                            response.Add(p);
+                        }
+                    }
+                    else
+                    {
+                        IEnumerable<Player> players = db.Players.Where(p => p.Name.Contains(name, StringComparison.OrdinalIgnoreCase) || p.SummonerName.Contains(name, StringComparison.OrdinalIgnoreCase));
+                        foreach(var player in players)
+                        {
+                            PlayerDTO p = new PlayerDTO()
+                            {
+                                Id = player.Id,
+                                Name = player.Name,
+                                SummonerName = player.SummonerName,
+                                Notes = player.Notes,
+                                SummonerDto = _riotService.GetSummonerByName(player.SummonerName)
+                            };
+                            response.Add(p);
+                        }
                     }
                 }
                 return response;

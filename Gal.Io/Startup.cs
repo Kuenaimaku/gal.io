@@ -6,6 +6,7 @@ using Gal.Io.Interfaces;
 using Gal.Io.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -30,6 +31,7 @@ namespace Gal.Io
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddCors();
+            services.AddResponseCaching();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             //Serve up configuration file via DI for easy use
@@ -38,6 +40,7 @@ namespace Gal.Io
             _logger.LogInformation("Adding RiotService");
             services.AddTransient<IRiotService, RiotService>();
             services.AddTransient<IPlayerService, PlayerService>();
+            services.AddSingleton<IChampionService, ChampionService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -55,9 +58,28 @@ namespace Gal.Io
 
             app.UseCors(builder =>
                 builder.WithOrigins(Configuration.GetSection("Riot").GetValue<string>("BaseUri"))
-                .WithOrigins("http://localhost:8080").AllowAnyMethod().AllowAnyHeader());
+                .WithOrigins("http://localhost:8080").AllowAnyMethod().AllowAnyHeader()
+                .WithOrigins("http://ddragon.leagueoflegends.com/"));
+
+            app.UseResponseCaching();
+            app.Use(async (context, next) =>
+            {
+                // For GetTypedHeaders, add: using Microsoft.AspNetCore.Http;
+                context.Response.GetTypedHeaders().CacheControl =
+                    new Microsoft.Net.Http.Headers.CacheControlHeaderValue()
+                    {
+                        Public = true,
+                        MaxAge = TimeSpan.FromSeconds(10)
+                    };
+                context.Response.Headers[Microsoft.Net.Http.Headers.HeaderNames.Vary] =
+                    new string[] { "Accept-Encoding" };
+
+                await next();
+            });
 
             app.UseMvc();
+            //Initialize InDesignService on Startup instead of first invocation via API
+            app.ApplicationServices.GetService<IChampionService>();
         }
     }
 }

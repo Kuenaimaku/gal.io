@@ -8,7 +8,7 @@ namespace Gal.Io.Interfaces
 {
     public interface IPlayerService
     {
-        IEnumerable<PlayerDTO> FetchPlayers();
+        IEnumerable<PlayerDTO> FetchPlayers(string name);
         PlayerDTO GetPlayer(Guid id);
         bool AddPlayer(PlayerDTO player);
         bool RemovePlayer(Guid id);

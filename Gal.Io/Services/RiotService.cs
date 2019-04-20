@@ -16,11 +16,13 @@ namespace Gal.Io.Services
         private readonly IConfiguration _config;
         private readonly ILogger<RiotService> _logger;
         private readonly HttpClient _client;
+        private readonly IChampionService _championService;
 
-        public RiotService(IConfiguration config, ILogger<RiotService> logger)
+        public RiotService(IConfiguration config, ILogger<RiotService> logger, IChampionService championService)
         {
             _config = config.GetSection("Riot");
             _logger = logger;
+            _championService = championService;
             _client = new HttpClient();
             _client.DefaultRequestHeaders.Add("X-Riot-Token", _config.GetValue<string>("ApiKey"));
             _client.BaseAddress = _config.GetValue<Uri>("BaseUri");
@@ -43,12 +45,29 @@ namespace Gal.Io.Services
             }
         }
 
-        public String GetMatchByID(long MatchID){
+        public MatchDTO GetMatchByID(long MatchID){
             try{
                 string endpoint = @"/lol/match/v4/matches/";
                 var response = _client.GetAsync($"{endpoint}{MatchID}").Result;
                 var responseContent = response.Content.ReadAsStringAsync().Result;
-                return responseContent;
+                var match = JsonConvert.DeserializeObject<MatchDTO>(responseContent);
+                foreach( var participant in match.Participants)
+                {
+                    participant.Champion = _championService.GetChampionById(participant.ChampionId);
+                }
+                foreach(var team in match.Teams)
+                {
+                    team.Participants.AddRange(match.Participants.Where(x => x.TeamId == team.TeamId).ToList());
+                    foreach (var ban in team.Bans)
+                    {
+                        ban.Champion = _championService.GetChampionById(ban.ChampionId);
+                    }
+
+                    //Order the Lists
+                    team.Participants = team.Participants.OrderBy(x => x.ParticipantId).ToList();
+                    team.Bans = team.Bans.OrderBy(x => x.PickTurn).ToList();
+                }
+                return match;
             }
             catch(Exception ex){
                 _logger.LogError(ex.Message);

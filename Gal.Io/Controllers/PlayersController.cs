@@ -33,12 +33,20 @@ namespace Gal.Io.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<PlayerDTO>> Get()
         {
-            var response = _playerService.FetchPlayers();
+            var response = _playerService.FetchPlayers("");
             return Ok(JsonConvert.SerializeObject(response));
         }
 
         [HttpGet("{name}")]
-        public ActionResult <SummonerDTO> Validate(string name)
+        public ActionResult<IEnumerable<PlayerDTO>> SearchByName(string name)
+        {
+            var response = _playerService.FetchPlayers(name);
+            return Ok(JsonConvert.SerializeObject(response));
+        }
+
+
+        [HttpGet("Validate/{name}")]
+        public ActionResult<SummonerDTO> Validate(string name)
         {
             var response = _riotService.GetSummonerByName(name);
             return Ok(JsonConvert.SerializeObject(response));
@@ -57,7 +65,7 @@ namespace Gal.Io.Controllers
         public ActionResult Put([FromBody] PlayerDTO player)
         {
             var r = _playerService.AddPlayer(player);
-            if (r)
+            if (r)  
                 return Ok();
             else
                 return BadRequest();
