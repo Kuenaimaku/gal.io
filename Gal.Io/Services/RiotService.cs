@@ -42,8 +42,19 @@ namespace Gal.Io.Services
                 throw;
             }
         }
-        
 
+        public String GetMatchByID(long MatchID){
+            try{
+                string endpoint = @"/lol/match/v4/matches/";
+                var response = _client.GetAsync($"{endpoint}{MatchID}").Result;
+                var responseContent = response.Content.ReadAsStringAsync().Result;
+                return responseContent;
+            }
+            catch(Exception ex){
+                _logger.LogError(ex.Message);
+                throw;
+            }
+        }
     }
 
 

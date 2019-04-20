@@ -9,5 +9,6 @@ namespace Gal.Io.Interfaces
     public interface IRiotService
     {
         SummonerDTO GetSummonerByName(string name);
+        String GetMatchByID(long MatchID);
     }
 }
