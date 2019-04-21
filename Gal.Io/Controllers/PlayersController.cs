@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Gal.Io.Interfaces;
 using Gal.Io.Interfaces.DTOs;
 using Gal.Io.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -53,7 +54,7 @@ namespace Gal.Io.Controllers
         }
 
         // PATCH api/players
-        [HttpPatch]
+        [HttpPatch, Authorize]
         public PlayerDTO Patch([FromBody] PlayerDTO player)
         {
             var response = _playerService.PatchPlayer(player);
@@ -61,7 +62,7 @@ namespace Gal.Io.Controllers
         }
 
         // PUT api/players
-        [HttpPut]
+        [HttpPut, Authorize]
         public ActionResult Put([FromBody] PlayerDTO player)
         {
             var r = _playerService.AddPlayer(player);
@@ -73,7 +74,7 @@ namespace Gal.Io.Controllers
         }
 
         // DELETE api/players/guid
-        [HttpDelete("{id}")]
+        [HttpDelete("{id}"), Authorize]
         public ActionResult Delete(Guid id)
         {
             var r = _playerService.RemovePlayer(id);
