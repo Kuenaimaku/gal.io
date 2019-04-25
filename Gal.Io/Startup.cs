@@ -69,6 +69,7 @@ namespace Gal.Io
             services.AddTransient<IRiotService, RiotService>();
             services.AddTransient<IPlayerService, PlayerService>();
             services.AddSingleton<IChampionService, ChampionService>();
+            services.AddTransient<IAccountService, AccountService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

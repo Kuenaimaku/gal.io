@@ -9,6 +9,8 @@ namespace Gal.Io.Models
     {
         public DbSet<Player> Players { get; set; }
 
+        public DbSet<User> Users { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlite("Filename=./data.db");
@@ -18,6 +20,10 @@ namespace Gal.Io.Models
         {
             modelBuilder.Entity<Player>()
                 .HasIndex(b => b.SummonerName)
+                .IsUnique();
+
+            modelBuilder.Entity<User>()
+                .HasIndex(b => b.Username)
                 .IsUnique();
         }
 
@@ -30,6 +36,15 @@ namespace Gal.Io.Models
         public string SummonerName { get; set; }
         public string Notes { get; set; }
 
+    }
+
+    public class User
+    {
+        public Guid Id { get; set; }
+        public string Username { get; set; }
+        public string Email { get; set; }
+        public string Salt { get; set; }
+        public string Hash { get; set; }
     }
 
 }
