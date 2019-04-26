@@ -38,7 +38,7 @@ namespace Gal.Io.Services
                         {
                             PlayerDTO p = new PlayerDTO()
                             {
-                                Id = player.Id,
+                                PlayerId = player.PlayerId,
                                 Name = player.Name,
                                 SummonerName = player.SummonerName,
                                 Notes = player.Notes,
@@ -54,7 +54,7 @@ namespace Gal.Io.Services
                         {
                             PlayerDTO p = new PlayerDTO()
                             {
-                                Id = player.Id,
+                                PlayerId = player.PlayerId,
                                 Name = player.Name,
                                 SummonerName = player.SummonerName,
                                 Notes = player.Notes,
@@ -73,7 +73,7 @@ namespace Gal.Io.Services
             }
         }
 
-        public PlayerDTO GetPlayer(Guid id)
+        public PlayerDTO GetPlayer(Guid playerId)
         {
             try
             {
@@ -81,11 +81,11 @@ namespace Gal.Io.Services
                 using (var db = new DataContext())
                 {
                     Player player = db.Players
-                                        .Where(p => p.Id == id)
+                                        .Where(p => p.PlayerId == playerId)
                                         .FirstOrDefault();
                     if (player != null)
                     {
-                        response.Id = player.Id;
+                        response.PlayerId = player.PlayerId;
                         response.Name = player.Name;
                         response.SummonerName = player.SummonerName;
                         response.Notes = player.Notes;
@@ -108,7 +108,7 @@ namespace Gal.Io.Services
                 bool response = false;
                 Player p = new Player()
                 {
-                    Id = Guid.NewGuid(),
+                    PlayerId = Guid.NewGuid(),
                     Name = player.Name,
                     SummonerName = player.SummonerName,
                     Notes = player.Notes
@@ -130,7 +130,7 @@ namespace Gal.Io.Services
             }
         }
 
-        public bool RemovePlayer(Guid id)
+        public bool RemovePlayer(Guid playerId)
         {
             try
             {
@@ -138,7 +138,7 @@ namespace Gal.Io.Services
                 using (var db = new DataContext())
                 {
                     Player player = db.Players
-                                        .Where(p => p.Id == id)
+                                        .Where(p => p.PlayerId == playerId)
                                         .FirstOrDefault();
                     if (player != null)
                     {
@@ -166,7 +166,7 @@ namespace Gal.Io.Services
                 using (var db = new DataContext())
                 {
                     Player _p = db.Players
-                                    .Where(p => p.Id == player.Id)
+                                    .Where(p => p.PlayerId == player.PlayerId)
                                     .FirstOrDefault();
                     if (_p != null)
                     {
@@ -176,7 +176,7 @@ namespace Gal.Io.Services
                         int count = db.SaveChanges();
                         _logger.LogInformation($"{count} records removed from database");
                         if (count == 1)
-                            response = GetPlayer(_p.Id);
+                            response = GetPlayer(_p.PlayerId);
                     }
                 }
                 return response;

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Gal.Io.Interfaces;
+using Gal.Io.Models;
 using Gal.Io.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -60,14 +61,18 @@ namespace Gal.Io
             });
 
             services.AddResponseCaching();
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+            services.AddMvc()
+                .AddJsonOptions(
+            options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+            )
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             //Serve up configuration file via DI for easy use
             services.AddSingleton(Configuration);
             //Dependency Injection - add services here
-            _logger.LogInformation("Adding RiotService");
             services.AddTransient<IRiotService, RiotService>();
             services.AddTransient<IPlayerService, PlayerService>();
+            services.AddTransient<IMatchService, MatchService>();
             services.AddSingleton<IChampionService, ChampionService>();
             services.AddTransient<IAccountService, AccountService>();
         }

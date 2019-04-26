@@ -9,7 +9,7 @@ namespace Gal.Io.Interfaces.DTOs
     public class PlayerDTO
     {
         [JsonProperty("id")]
-        public Guid Id { get; set; }
+        public Guid PlayerId { get; set; }
         [JsonProperty("name")]
         public string Name { get; set; }
         [JsonProperty("summonerName")]

@@ -36,7 +36,7 @@ namespace Gal.Io.Services
                     if (!Hash.Validate(login.Password, user.Salt, user.Hash))
                         response = null;
                     else
-                        response = new UserDTO() { Username = user.Username, Email = user.Email };
+                        response = new UserDTO() { Username = user.Username, Email = user.Email, UserId = user.UserId };
             }
             return response;
         }
@@ -62,7 +62,7 @@ namespace Gal.Io.Services
                         int count = db.SaveChanges();
                         _logger.LogInformation($"{count} records saved to database");
                         if (count == 1)
-                            response = new UserDTO() { Username = u.Username, Email = u.Email };
+                            response = new UserDTO() { Username = u.Username, Email = u.Email, UserId = u.UserId };
                     }
                 }
             }

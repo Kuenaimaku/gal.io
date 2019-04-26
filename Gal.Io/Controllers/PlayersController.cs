@@ -62,8 +62,8 @@ namespace Gal.Io.Controllers
         }
 
         // PUT api/players
-        [HttpPut, Authorize]
-        public ActionResult Put([FromBody] PlayerDTO player)
+        [HttpPost, Authorize]
+        public ActionResult Post([FromBody] PlayerDTO player)
         {
             var r = _playerService.AddPlayer(player);
             if (r)  

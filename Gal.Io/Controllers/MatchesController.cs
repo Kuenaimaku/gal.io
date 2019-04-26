@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Gal.Io.Interfaces;
 using Gal.Io.Interfaces.DTOs;
 using Gal.Io.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -20,17 +21,21 @@ namespace League_Recorder_Backend.Controllers
         private readonly IConfiguration _config;
         private readonly ILogger<MatchesController> _logger;
         private readonly IRiotService _riotService;
-        public MatchesController(IConfiguration config, ILogger<MatchesController> logger, IRiotService riotService)
+        private readonly IMatchService _matchService;
+        public MatchesController(IConfiguration config, ILogger<MatchesController> logger, IRiotService riotService, IMatchService matchService)
         {
             _config = config;
             _logger = logger;
             _riotService = riotService;
+            _matchService = matchService;
         }
 
         // GET api/players
         [HttpGet]
-        public void Get()
+        public IEnumerable<Match> Get()
         {
+            var res = _matchService.GetMatches();
+            return res;
         }
 
         [HttpGet("{MatchID}")]
@@ -41,9 +46,15 @@ namespace League_Recorder_Backend.Controllers
         }
 
         // POST api/values
+        [Authorize]
         [HttpPost]
-        public void Post([FromBody] string value)
+        public IActionResult Post([FromBody] CreateMatchDTO match)
         {
+            bool response = _matchService.CreateMatch(match);
+            if (response)
+                return Ok();
+            else
+                return BadRequest();
         }
 
         // PUT api/values/5
