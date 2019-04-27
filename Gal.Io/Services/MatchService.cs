@@ -1,4 +1,5 @@
-﻿using Gal.Io.Interfaces;
+﻿using AutoMapper;
+using Gal.Io.Interfaces;
 using Gal.Io.Interfaces.DTOs;
 using Gal.Io.Models;
 using Microsoft.EntityFrameworkCore;
@@ -17,30 +18,121 @@ namespace Gal.Io.Services
     {
         private readonly IConfiguration _config;
         private readonly ILogger<MatchService> _logger;
+        private readonly IMapper _mapper;
         private readonly IRiotService _riotService;
         private readonly IPlayerService _playerService;
+        private readonly IChampionService _championService;
 
-        public MatchService(IConfiguration config, ILogger<MatchService> logger, IRiotService riotService, IPlayerService playerService)
+        public MatchService(IConfiguration config, ILogger<MatchService> logger, IMapper mapper, IRiotService riotService, IPlayerService playerService, IChampionService championService)
         {
             _config = config;
             _logger = logger;
+            _mapper = mapper;
             _riotService = riotService;
             _playerService = playerService;
+            _championService = championService;
         }
 
-        public IEnumerable<Match> GetMatches()
+        public IEnumerable<MatchView> GetMatches()
         {
+            List<MatchView> matches = new List<MatchView>();
             using (var db = new DataContext())
             {
-                return db.Matches
-                    .Include(x => x.ChampionPicks)
-                    .Include(x => x.ChampionBans)
-                    .Include(x => x.Participants)
-                        .ThenInclude(y => y.Player)
-                    .Include(x => x.PlayerStats)
-                        .ThenInclude(y => y.Player)
-                    .ToList();
+                foreach(Match match in db.Matches)
+                {
+                    var m = _mapper.Map<MatchView>(match);
+                    var team1 = new TeamView();
+                    var team2 = new TeamView();
+                    m.User = _mapper.Map<UserView>(db.Users.Where(x => x.UserId == match.UserId).First());
+
+                    foreach (var participant in match.Participants)
+                    {
+                        var _ps = db.PlayerStats.Where(x => x.MatchId == match.MatchId && x.PlayerId == participant.PlayerId).First();
+                        var _pl = _mapper.Map<PlayerView>(db.Players.Where(x => x.PlayerId == participant.PlayerId).First());
+                        _pl.LeagueAccount = _riotService.GetSummonerByName(_pl.SummonerName);
+                        var _p = new ParticipantView
+                        {
+                            Role = _ps.Role,
+                            Win = _ps.Win,
+                            Kills = _ps.Kills,
+                            Deaths = _ps.Deaths,
+                            Assists = _ps.Assists,
+                            VisionScore = _ps.VisionScore,
+                            GoldEarned = _ps.GoldEarned,
+                            GoldSpent = _ps.GoldSpent,
+                            TotalMinionsKilled = _ps.TotalMinionsKilled,
+                            Item0Id = _ps.Item0Id,
+                            Item1Id = _ps.Item1Id,
+                            Item2Id = _ps.Item2Id,
+                            Item3Id = _ps.Item3Id,
+                            Item4Id = _ps.Item4Id,
+                            Item5Id = _ps.Item5Id,
+                            Item6Id = _ps.Item6Id,
+                            Spell1Id = _ps.Spell1Id,
+                            Spell2Id = _ps.Spell2Id,
+                            Player = _pl,
+                        };
+                        var _cp = db.ChampionPicks.Where(x => x.MatchId == match.MatchId && x.PlayerId == participant.PlayerId).First();
+                        _p.Champion = _mapper.Map<ChampionView>(_championService.GetChampionById(_cp.ChampionKey));
+                        
+
+                        if (participant.Side == 0)
+                        {
+                            if (team1.TowerKills == 0 || team1.DragonKills == 0)
+                            {
+                                team1.Win = participant.Win;
+                                team1.FirstBlood = participant.FirstBlood;
+                                team1.FirstDragon = participant.FirstDragon;
+                                team1.FirstRiftHerald = participant.FirstRiftHerald;
+                                team1.FirstBaron = participant.FirstBaron;
+                                team1.FirstTower = participant.FirstTower;
+                                team1.FirstInhibitor = participant.FirstInhibitor;
+                                team1.DragonKills = participant.DragonKills;
+                                team1.BaronKills = participant.BaronKills;
+                                team1.TowerKills = participant.TowerKills;
+                                team1.InhibitorKills = participant.InhibitorKills;
+                                team1.VilemawKills = participant.VilemawKills;
+                            }
+                            team1.Participants.Add(_p);
+                        }
+                        else
+                        {
+                            if (team2.TowerKills == 0 || team2.DragonKills == 0)
+                            {
+                                team2.Win = participant.Win;
+                                team2.FirstBlood = participant.FirstBlood;
+                                team2.FirstDragon = participant.FirstDragon;
+                                team2.FirstRiftHerald = participant.FirstRiftHerald;
+                                team2.FirstBaron = participant.FirstBaron;
+                                team2.FirstTower = participant.FirstTower;
+                                team2.FirstInhibitor = participant.FirstInhibitor;
+                                team2.DragonKills = participant.DragonKills;
+                                team2.BaronKills = participant.BaronKills;
+                                team2.TowerKills = participant.TowerKills;
+                                team2.InhibitorKills = participant.InhibitorKills;
+                                team2.VilemawKills = participant.VilemawKills;
+                            }
+                            team2.Participants.Add(_p);
+                        }
+                            
+                    }
+                    foreach (var ban in match.ChampionBans)
+                    {
+                        var _b = _mapper.Map<ChampionBanView>(ban);
+                        _b.Champion = _mapper.Map<ChampionView>(_championService.GetChampionById(ban.ChampionKey));
+                        if (ban.Side == 0)
+                            team1.Bans.Add(_b);
+                        else
+                            team2.Bans.Add(_b);
+                    }
+
+                    m.Teams.Add(team1);
+                    m.Teams.Add(team2);
+                    matches.Add(m);
+                }
+                    
             }
+            return matches;
         }
 
         public bool CreateMatch(CreateMatchDTO request)
@@ -252,11 +344,15 @@ namespace Gal.Io.Services
                             {
                                 foreach(var ban in team.Bans)
                                 {
+                                    var side = 0;
+                                    if (team.TeamId == 200)
+                                        side = 1;
                                     var championBan = new ChampionBan
                                     {
                                         MatchId = request.Match.GameId,
                                         ChampionKey = ban.ChampionId,
                                         PickTurn = ban.PickTurn,
+                                        Side = side,
                                         TimeStamp = timestamp
                                     };
                                     db.ChampionBans.Add(championBan);

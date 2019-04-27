@@ -10,6 +10,8 @@ namespace Gal.Io.Models
     [Table("PlayerStats")]
     public class PlayerStats
     {
+        [Key]
+        public Guid PlayerStatId { get; set; }
         //The Match this TeamMember is for
         [ForeignKey("Match"), Column("Match_Id", Order = 0)]
         public long MatchId { get; set; }

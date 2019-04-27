@@ -9,6 +9,9 @@ namespace Gal.Io.Models
     [Table("ChampionPicks")]
     public class ChampionPick
     {
+
+        [Key]
+        public Guid ChampionPickId { get; set; }
         [ForeignKey("Match"), Column("Match_Id", Order = 0)]
         public long MatchId { get; set; }
 

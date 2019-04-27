@@ -10,7 +10,8 @@ namespace Gal.Io.Models
     [Table("Participants")]
     public class Participant
     {
-
+        [Key]
+        public Guid ParticipantId { get; set; }
         //The Match this TeamMember is for
         [ForeignKey("Match"), Column("Match_Id", Order = 0)]
         public long MatchId { get; set; }
@@ -20,7 +21,6 @@ namespace Gal.Io.Models
         [ForeignKey("Player"), Column("Player_Id", Order = 1)]
         public Guid PlayerId { get; set; }
         public virtual Player Player { get; set; }
-
 
         //TeamMember-Specific information that isn't performance related
         [Required]

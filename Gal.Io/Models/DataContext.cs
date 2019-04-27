@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using Microsoft.EntityFrameworkCore;
 
 namespace Gal.Io.Models
@@ -18,22 +16,7 @@ namespace Gal.Io.Models
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlite("Filename=./data.db");
-        }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<ChampionBan>()
-                .HasKey(c => new { c.MatchId, c.ChampionKey });
-
-            modelBuilder.Entity<ChampionPick>()
-                .HasKey(c => new { c.MatchId, c.PlayerId, c.ChampionKey });
-
-            modelBuilder.Entity<Participant>()
-                .HasKey(c => new { c.MatchId, c.PlayerId });
-
-            modelBuilder.Entity<PlayerStats>()
-                .HasKey(c => new { c.MatchId, c.PlayerId, c.ChampionKey });
-
+            optionsBuilder.UseLazyLoadingProxies();
         }
 
     }

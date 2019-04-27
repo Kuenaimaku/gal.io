@@ -32,7 +32,7 @@ namespace League_Recorder_Backend.Controllers
 
         // GET api/players
         [HttpGet]
-        public IEnumerable<Match> Get()
+        public IEnumerable<MatchView> Get()
         {
             var res = _matchService.GetMatches();
             return res;

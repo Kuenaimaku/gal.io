@@ -9,7 +9,7 @@ namespace Gal.Io.Interfaces
 {
     public interface IMatchService
     {
-        IEnumerable<Match> GetMatches();
+        IEnumerable<MatchView> GetMatches();
         bool CreateMatch(CreateMatchDTO match);
     }
 }

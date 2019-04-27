@@ -1,42 +1,41 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace Gal.Io.Interfaces.DTOs
 {
-    public class ParticipantStatsDTO
+    public class ParticipantView
     {
-        [JsonProperty("kills")]
-        public int Kills { get; set; }
-        [JsonProperty("deaths")]
-        public int Deaths { get; set; }
-        [JsonProperty("assists")]
-        public int Assists { get; set; }
-        [JsonProperty("visionScore")]
-        public long VisionScore { get; set; }
-        [JsonProperty("win")]
+
+
+        public string Role { get; set; }
+
+        //ParticipantStatDTO information
         public bool Win { get; set; }
-        [JsonProperty("goldEarned")]
+        public int Kills { get; set; }
+        public int Deaths { get; set; }
+        public int Assists { get; set; }
+        public long VisionScore { get; set; }
+
         public int GoldEarned { get; set; }
-        [JsonProperty("goldSpent")]
         public int GoldSpent { get; set; }
-        [JsonProperty("totalMinionsKilled")]
         public int TotalMinionsKilled { get; set; }
-        [JsonProperty("item0")]
+
         public int Item0Id { get; set; }
-        [JsonProperty("item1")]
         public int Item1Id { get; set; }
-        [JsonProperty("item2")]
         public int Item2Id { get; set; }
-        [JsonProperty("item3")]
         public int Item3Id { get; set; }
-        [JsonProperty("item4")]
         public int Item4Id { get; set; }
-        [JsonProperty("item5")]
         public int Item5Id { get; set; }
-        [JsonProperty("item6")]
         public int Item6Id { get; set; }
+
+        //ParticipantDTO information
+        public int Spell1Id { get; set; }
+        public int Spell2Id { get; set; }
+
+        public virtual ChampionView Champion { get; set; }
+        public virtual PlayerView Player { get; set; }
+
     }
 }

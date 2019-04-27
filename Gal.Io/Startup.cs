@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AutoMapper;
 using Gal.Io.Interfaces;
 using Gal.Io.Models;
 using Gal.Io.Services;
@@ -61,6 +62,7 @@ namespace Gal.Io
             });
 
             services.AddResponseCaching();
+            services.AddAutoMapper();
             services.AddMvc()
                 .AddJsonOptions(
             options => options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore

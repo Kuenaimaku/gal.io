@@ -19,9 +19,9 @@ namespace Gal.Io.Models
         [MaxLength(100)]
         public string Notes { get; set; }
 
-        public List<ChampionPick> ChampionPicks { get; set; }
-        public List<PlayerStats> PlayerStats { get; set; }
-        public List<Participant> Participations { get; set; }
+        public virtual List<ChampionPick> ChampionPicks { get; set; }
+        public virtual List<PlayerStats> PlayerStats { get; set; }
+        public virtual List<Participant> Participations { get; set; }
 
 
     }
