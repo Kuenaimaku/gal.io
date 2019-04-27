@@ -72,10 +72,10 @@ namespace Gal.Io
             //Serve up configuration file via DI for easy use
             services.AddSingleton(Configuration);
             //Dependency Injection - add services here
-            services.AddTransient<IRiotService, RiotService>();
+            services.AddSingleton<IRiotService, RiotService>();
             services.AddTransient<IPlayerService, PlayerService>();
             services.AddTransient<IMatchService, MatchService>();
-            services.AddSingleton<IChampionService, ChampionService>();
+            services.AddTransient<IChampionService, ChampionService>();
             services.AddTransient<IAccountService, AccountService>();
         }
 
@@ -113,8 +113,6 @@ namespace Gal.Io
             });
 
             app.UseMvc();
-            //Initialize InDesignService on Startup instead of first invocation via API
-            app.ApplicationServices.GetService<IChampionService>();
         }
     }
 }

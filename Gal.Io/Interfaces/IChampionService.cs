@@ -8,6 +8,6 @@ namespace Gal.Io.Interfaces
 {
     public interface IChampionService
     {
-        ChampionDTO GetChampionById(int id);
+        IEnumerable<ChampionStatsView> FetchChampions();
     }
 }

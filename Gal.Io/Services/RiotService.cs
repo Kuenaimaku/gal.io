@@ -3,6 +3,7 @@ using Gal.Io.Interfaces.DTOs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,16 +17,42 @@ namespace Gal.Io.Services
         private readonly IConfiguration _config;
         private readonly ILogger<RiotService> _logger;
         private readonly HttpClient _client;
-        private readonly IChampionService _championService;
+        private readonly IList<ChampionDTO> _champions;
 
-        public RiotService(IConfiguration config, ILogger<RiotService> logger, IChampionService championService)
+        public RiotService(IConfiguration config, ILogger<RiotService> logger)
         {
             _config = config.GetSection("Riot");
             _logger = logger;
-            _championService = championService;
+            _champions = new List<ChampionDTO>();
+            BuildChampionCache();
             _client = new HttpClient();
             _client.DefaultRequestHeaders.Add("X-Riot-Token", _config.GetValue<string>("ApiKey"));
             _client.BaseAddress = _config.GetValue<Uri>("BaseUri");
+        }
+
+        private void BuildChampionCache()
+        {
+            var _client = new HttpClient();
+            var url = @"http://ddragon.leagueoflegends.com/cdn/9.8.1/data/en_US/champion.json";
+            var response = _client.GetAsync($"{url}").Result;
+            var responseContent = response.Content.ReadAsStringAsync().Result;
+            JObject championJson = JObject.Parse(responseContent)["data"].Value<JObject>();
+            foreach (var champion in championJson)
+            {
+                _champions.Add(JsonConvert.DeserializeObject<ChampionDTO>(champion.Value.ToString()));
+            }
+
+        }
+
+        public ChampionDTO GetChampionById(int id)
+        {
+            return _champions.Where(x => x.Key == id).FirstOrDefault();
+
+        }
+
+        public IEnumerable<ChampionDTO> FetchChampions()
+        {
+            return _champions.OrderBy(x => x.Name);
         }
 
         public SummonerDTO GetSummonerByName(string name)
@@ -53,14 +80,14 @@ namespace Gal.Io.Services
                 var match = JsonConvert.DeserializeObject<MatchDTO>(responseContent);
                 foreach( var participant in match.Participants)
                 {
-                    participant.Champion = _championService.GetChampionById(participant.ChampionId);
+                    participant.Champion = GetChampionById(participant.ChampionId);
                 }
                 foreach(var team in match.Teams)
                 {
                     team.Participants.AddRange(match.Participants.Where(x => x.TeamId == team.TeamId).ToList());
                     foreach (var ban in team.Bans)
                     {
-                        ban.Champion = _championService.GetChampionById(ban.ChampionId);
+                        ban.Champion = GetChampionById(ban.ChampionId);
                     }
 
                     //Order the Lists

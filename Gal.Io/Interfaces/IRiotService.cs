@@ -10,5 +10,9 @@ namespace Gal.Io.Interfaces
     {
         SummonerDTO GetSummonerByName(string name);
         MatchDTO GetMatchByID(long MatchID);
+
+        ChampionDTO GetChampionById(int id);
+
+        IEnumerable<ChampionDTO> FetchChampions();
     }
 }

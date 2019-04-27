@@ -9,6 +9,8 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using AutoMapper;
+using Gal.Io.Models;
 
 namespace Gal.Io.Services
 {
@@ -16,35 +18,50 @@ namespace Gal.Io.Services
     {
         private readonly IConfiguration _config;
         private readonly ILogger<ChampionService> _logger;
-        private readonly IList<ChampionDTO> _champions;
+        private readonly IMapper _mapper;
+        private readonly IRiotService _riotService;
 
-        public ChampionService(IConfiguration config, ILogger<ChampionService> logger)
+        public ChampionService(IConfiguration config, ILogger<ChampionService> logger, IMapper mapper, IRiotService riotService)
         {
             _config = config;
             _logger = logger;
-            _champions = new List<ChampionDTO>();
-            BuildChampionCache();
+            _mapper = mapper;
+            _riotService = riotService;
             
         }
 
-        private void BuildChampionCache()
+        public IEnumerable<ChampionStatsView> FetchChampions()
         {
-            var _client = new HttpClient();
-            var url = @"http://ddragon.leagueoflegends.com/cdn/9.8.1/data/en_US/champion.json";
-            var response = _client.GetAsync($"{url}").Result;
-            var responseContent = response.Content.ReadAsStringAsync().Result;
-            JObject championJson = JObject.Parse(responseContent)["data"].Value<JObject>();
-            foreach (var champion in championJson)
+            List<ChampionStatsView> response = new List<ChampionStatsView>();
+            var champions = _riotService.FetchChampions();
+            using (var db = new DataContext())
             {
-                _champions.Add(JsonConvert.DeserializeObject<ChampionDTO>(champion.Value.ToString()));
+                foreach (var champion in champions)
+                {
+                    var _c = _mapper.Map<ChampionView>(champion);
+                    _c.Image = champion.Image.Full;
+                    int picks = db.ChampionPicks.Where(x => x.ChampionKey == _c.Key).Count();
+                    int blueBans = db.ChampionBans.Where(x => x.ChampionKey == _c.Key && x.Side == 0).Count();
+                    int redBans = db.ChampionBans.Where(x => x.ChampionKey == _c.Key && x.Side == 1).Count();
+                    int wins = (from cp in db.ChampionPicks
+                                join par in db.Participants
+                                on new { cp.MatchId, cp.PlayerId } equals new { par.MatchId, par.PlayerId }
+                                where par.Win == true && cp.ChampionKey == _c.Key
+                                select par.ParticipantId).Count();
+                    int totalMatches = db.Matches.Count();
+                    var championStats = new ChampionStatsView
+                    {
+                        Champion = _c,
+                        TotalMatches = totalMatches,
+                        Picks = picks,
+                        Wins = wins,
+                        BlueBans = blueBans,
+                        RedBans = redBans
+                    };
+                    response.Add(championStats);
+                }
             }
-
-        }
-
-        public ChampionDTO GetChampionById(int id)
-        {
-            return _champions.Where(x => x.Key == id).FirstOrDefault();
-            
+            return response;
         }
     }
 }

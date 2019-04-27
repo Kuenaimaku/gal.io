@@ -73,7 +73,7 @@ namespace Gal.Io.Services
                             Player = _pl,
                         };
                         var _cp = db.ChampionPicks.Where(x => x.MatchId == match.MatchId && x.PlayerId == participant.PlayerId).First();
-                        _p.Champion = _mapper.Map<ChampionView>(_championService.GetChampionById(_cp.ChampionKey));
+                        _p.Champion = _mapper.Map<ChampionView>(_riotService.GetChampionById(_cp.ChampionKey));
                         
 
                         if (participant.Side == 0)
@@ -119,7 +119,7 @@ namespace Gal.Io.Services
                     foreach (var ban in match.ChampionBans)
                     {
                         var _b = _mapper.Map<ChampionBanView>(ban);
-                        _b.Champion = _mapper.Map<ChampionView>(_championService.GetChampionById(ban.ChampionKey));
+                        _b.Champion = _mapper.Map<ChampionView>(_riotService.GetChampionById(ban.ChampionKey));
                         if (ban.Side == 0)
                             team1.Bans.Add(_b);
                         else
