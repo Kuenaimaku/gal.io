@@ -31,8 +31,8 @@ namespace Gal.Io.Interfaces.DTOs
         public int Item6Id { get; set; }
 
         //ParticipantDTO information
-        public int Spell1Id { get; set; }
-        public int Spell2Id { get; set; }
+        public SummonerSpellDTO SummonerSpell1 { get; set; }
+        public SummonerSpellDTO SummonerSpell2 { get; set; }
 
         public virtual ChampionView Champion { get; set; }
         public virtual PlayerView Player { get; set; }

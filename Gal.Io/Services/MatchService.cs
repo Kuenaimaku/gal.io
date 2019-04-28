@@ -41,6 +41,10 @@ namespace Gal.Io.Services
                 foreach(Match match in db.Matches)
                 {
                     var m = _mapper.Map<MatchView>(match);
+                    //Manipulate gameversion to get a usable game version...
+                    var subs = m.GameVersion.Split(".");
+                    m.GameVersion = $"{subs[0]}.{subs[1]}.1";
+
                     var team1 = new TeamView();
                     var team2 = new TeamView();
                     m.User = _mapper.Map<UserView>(db.Users.Where(x => x.UserId == match.UserId).First());
@@ -68,8 +72,8 @@ namespace Gal.Io.Services
                             Item4Id = _ps.Item4Id,
                             Item5Id = _ps.Item5Id,
                             Item6Id = _ps.Item6Id,
-                            Spell1Id = _ps.Spell1Id,
-                            Spell2Id = _ps.Spell2Id,
+                            SummonerSpell1 = _riotService.GetSummonerSpellById(_ps.Spell1Id),
+                            SummonerSpell2 = _riotService.GetSummonerSpellById(_ps.Spell2Id),
                             Player = _pl,
                         };
                         var _cp = db.ChampionPicks.Where(x => x.MatchId == match.MatchId && x.PlayerId == participant.PlayerId).First();
@@ -132,6 +136,7 @@ namespace Gal.Io.Services
                 }
                     
             }
+            matches = matches.OrderByDescending(x => x.TimeStamp).ToList();
             return matches;
         }
 
@@ -196,7 +201,8 @@ namespace Gal.Io.Services
                                     BaronKills = request.Match.Teams[0].BaronKills,
                                     TowerKills = request.Match.Teams[0].TowerKills,
                                     InhibitorKills = request.Match.Teams[0].InhibitorKills,
-                                    VilemawKills = request.Match.Teams[0].VilemawKills
+                                    VilemawKills = request.Match.Teams[0].VilemawKills,
+                                    TimeStamp = timestamp,
                                 };
                                 db.Participants.Add(participant);
                                 var participantCount = db.SaveChanges();
@@ -280,7 +286,8 @@ namespace Gal.Io.Services
                                     BaronKills = request.Match.Teams[1].BaronKills,
                                     TowerKills = request.Match.Teams[1].TowerKills,
                                     InhibitorKills = request.Match.Teams[1].InhibitorKills,
-                                    VilemawKills = request.Match.Teams[1].VilemawKills
+                                    VilemawKills = request.Match.Teams[1].VilemawKills,
+                                    TimeStamp = timestamp
                                 };
                                 db.Participants.Add(participant);
                                 var participantCount = db.SaveChanges();
@@ -365,6 +372,7 @@ namespace Gal.Io.Services
                             }
 
                             Transaction.Commit();
+                            response = true;
                         }
                         catch (Exception ex)
                         {
@@ -372,7 +380,6 @@ namespace Gal.Io.Services
                             Transaction.Rollback();
                         }
                     }
-                    response = true;
                 }
             }
             return response;

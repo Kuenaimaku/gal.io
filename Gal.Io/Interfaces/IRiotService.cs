@@ -14,5 +14,9 @@ namespace Gal.Io.Interfaces
         ChampionDTO GetChampionById(int id);
 
         IEnumerable<ChampionDTO> FetchChampions();
+
+        SummonerSpellDTO GetSummonerSpellById(int id);
+
+        IEnumerable<SummonerSpellDTO> FetchSummonerSpells();
     }
 }
