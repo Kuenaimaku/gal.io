@@ -1,6 +1,8 @@
-﻿using Gal.Io.Interfaces;
+﻿using AutoMapper;
+using Gal.Io.Interfaces;
 using Gal.Io.Interfaces.DTOs;
 using Gal.Io.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -17,11 +19,14 @@ namespace Gal.Io.Services
         private readonly IConfiguration _config;
         private readonly ILogger<PlayerService> _logger;
         private readonly IRiotService _riotService;
+        private readonly IMapper _mapper;
+        private readonly IPlayerService _playerService;
 
-        public PlayerService(IConfiguration config, ILogger<PlayerService> logger, IRiotService riotService)
+        public PlayerService(IConfiguration config, ILogger<PlayerService> logger, IMapper mapper, IRiotService riotService)
         {
             _config = config;
             _logger = logger;
+            _mapper = mapper;
             _riotService = riotService;
         }
 
@@ -90,6 +95,40 @@ namespace Gal.Io.Services
                         response.SummonerName = player.SummonerName;
                         response.Notes = player.Notes;
                         response.SummonerDto = _riotService.GetSummonerByName(player.SummonerName);
+                    }
+                }
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                throw;
+            }
+        }
+
+        public PlayerDetailView GetPlayerDetailed(Guid playerId)
+        {
+            try
+            {
+                PlayerDetailView response = new PlayerDetailView();
+                using (var db = new DataContext())
+                {
+                    Player player = db.Players
+                                        .Where(p => p.PlayerId == playerId)
+                                        .FirstOrDefault();
+                    if (player != null)
+                    {
+                        response = _mapper.Map<PlayerDetailView>(player);
+                        response.LeagueAccount = _riotService.GetSummonerByName(player.SummonerName);
+
+
+                        var r = db.GetBestAlly(playerId).Result.ToList().First();
+                        var ba = new RelatedPlayerView();
+                        ba.Player = _mapper.Map<PlayerView>(db.Players.Where(x=>x.PlayerId == r.PlayerId).First());
+                        ba.Data["Wins"] = r.Wins.ToString();
+                        response.BestAlly = ba;
+                        response.BestAlly.Player.LeagueAccount = _riotService.GetSummonerByName(response.BestAlly.Player.SummonerName);
+
                     }
                 }
                 return response;

@@ -38,6 +38,14 @@ namespace League_Recorder_Backend.Controllers
             return res;
         }
 
+        // GET api/matches/by-player/id
+        [HttpGet("by-player/{id}")]
+        public IEnumerable<MatchView> GetMatchesByPlayerId(Guid id)
+        {
+            var res = _matchService.GetMatchesFiltered(new MatchFilterDTO { PlayerId = id });
+            return res;
+        }
+
         [HttpGet("{MatchID}")]
         public ActionResult<MatchDTO> Validate(long MatchID)
         {

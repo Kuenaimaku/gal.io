@@ -10,6 +10,7 @@ namespace Gal.Io.Interfaces
     {
         IEnumerable<PlayerDTO> FetchPlayers(string name);
         PlayerDTO GetPlayer(Guid id);
+        PlayerDetailView GetPlayerDetailed(Guid id);
         bool AddPlayer(PlayerDTO player);
         bool RemovePlayer(Guid id);
         PlayerDTO PatchPlayer(PlayerDTO player);

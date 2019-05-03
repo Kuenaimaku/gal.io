@@ -38,7 +38,7 @@ namespace Gal.Io.Services
             List<MatchView> matches = new List<MatchView>();
             using (var db = new DataContext())
             {
-                foreach(Match match in db.Matches)
+                foreach (Match match in db.Matches)
                 {
                     var m = _mapper.Map<MatchView>(match);
                     //Manipulate gameversion to get a usable game version...
@@ -78,7 +78,7 @@ namespace Gal.Io.Services
                         };
                         var _cp = db.ChampionPicks.Where(x => x.MatchId == match.MatchId && x.PlayerId == participant.PlayerId).First();
                         _p.Champion = _mapper.Map<ChampionView>(_riotService.GetChampionById(_cp.ChampionKey));
-                        
+
 
                         if (participant.Side == 0)
                         {
@@ -118,7 +118,7 @@ namespace Gal.Io.Services
                             }
                             team2.Participants.Add(_p);
                         }
-                            
+
                     }
                     foreach (var ban in match.ChampionBans)
                     {
@@ -134,11 +134,126 @@ namespace Gal.Io.Services
                     m.Teams.Add(team2);
                     matches.Add(m);
                 }
-                    
+
             }
             matches = matches.OrderByDescending(x => x.TimeStamp).ToList();
             return matches;
         }
+
+
+        public IEnumerable<MatchView> GetMatchesFiltered(MatchFilterDTO filter)
+        {
+            List<MatchView> matches = new List<MatchView>();
+            using (var db = new DataContext())
+            {
+                var _matchIds = db.Participants.Where(x => x.PlayerId == filter.PlayerId).Select(x => x.MatchId).ToList();
+
+                if (_matchIds.Any())
+                {
+                    foreach (Match match in db.Matches.Where(x => _matchIds.Contains(x.MatchId)))
+                    {
+                        var m = _mapper.Map<MatchView>(match);
+                        //Manipulate gameversion to get a usable game version...
+                        var subs = m.GameVersion.Split(".");
+                        m.GameVersion = $"{subs[0]}.{subs[1]}.1";
+
+                        var team1 = new TeamView();
+                        var team2 = new TeamView();
+                        m.User = _mapper.Map<UserView>(db.Users.Where(x => x.UserId == match.UserId).First());
+
+                        foreach (var participant in match.Participants)
+                        {
+                            var _ps = db.PlayerStats.Where(x => x.MatchId == match.MatchId && x.PlayerId == participant.PlayerId).First();
+                            var _pl = _mapper.Map<PlayerView>(db.Players.Where(x => x.PlayerId == participant.PlayerId).First());
+                            _pl.LeagueAccount = _riotService.GetSummonerByName(_pl.SummonerName);
+                            var _p = new ParticipantView
+                            {
+                                Role = _ps.Role,
+                                Win = _ps.Win,
+                                Kills = _ps.Kills,
+                                Deaths = _ps.Deaths,
+                                Assists = _ps.Assists,
+                                VisionScore = _ps.VisionScore,
+                                GoldEarned = _ps.GoldEarned,
+                                GoldSpent = _ps.GoldSpent,
+                                TotalMinionsKilled = _ps.TotalMinionsKilled,
+                                Item0Id = _ps.Item0Id,
+                                Item1Id = _ps.Item1Id,
+                                Item2Id = _ps.Item2Id,
+                                Item3Id = _ps.Item3Id,
+                                Item4Id = _ps.Item4Id,
+                                Item5Id = _ps.Item5Id,
+                                Item6Id = _ps.Item6Id,
+                                SummonerSpell1 = _riotService.GetSummonerSpellById(_ps.Spell1Id),
+                                SummonerSpell2 = _riotService.GetSummonerSpellById(_ps.Spell2Id),
+                                Player = _pl,
+                            };
+                            var _cp = db.ChampionPicks.Where(x => x.MatchId == match.MatchId && x.PlayerId == participant.PlayerId).First();
+                            _p.Champion = _mapper.Map<ChampionView>(_riotService.GetChampionById(_cp.ChampionKey));
+
+
+                            if (participant.Side == 0)
+                            {
+                                if (team1.TowerKills == 0 || team1.DragonKills == 0)
+                                {
+                                    team1.Win = participant.Win;
+                                    team1.FirstBlood = participant.FirstBlood;
+                                    team1.FirstDragon = participant.FirstDragon;
+                                    team1.FirstRiftHerald = participant.FirstRiftHerald;
+                                    team1.FirstBaron = participant.FirstBaron;
+                                    team1.FirstTower = participant.FirstTower;
+                                    team1.FirstInhibitor = participant.FirstInhibitor;
+                                    team1.DragonKills = participant.DragonKills;
+                                    team1.BaronKills = participant.BaronKills;
+                                    team1.TowerKills = participant.TowerKills;
+                                    team1.InhibitorKills = participant.InhibitorKills;
+                                    team1.VilemawKills = participant.VilemawKills;
+                                }
+                                team1.Participants.Add(_p);
+                            }
+                            else
+                            {
+                                if (team2.TowerKills == 0 || team2.DragonKills == 0)
+                                {
+                                    team2.Win = participant.Win;
+                                    team2.FirstBlood = participant.FirstBlood;
+                                    team2.FirstDragon = participant.FirstDragon;
+                                    team2.FirstRiftHerald = participant.FirstRiftHerald;
+                                    team2.FirstBaron = participant.FirstBaron;
+                                    team2.FirstTower = participant.FirstTower;
+                                    team2.FirstInhibitor = participant.FirstInhibitor;
+                                    team2.DragonKills = participant.DragonKills;
+                                    team2.BaronKills = participant.BaronKills;
+                                    team2.TowerKills = participant.TowerKills;
+                                    team2.InhibitorKills = participant.InhibitorKills;
+                                    team2.VilemawKills = participant.VilemawKills;
+                                }
+                                team2.Participants.Add(_p);
+                            }
+
+                        }
+                        foreach (var ban in match.ChampionBans)
+                        {
+                            var _b = _mapper.Map<ChampionBanView>(ban);
+                            _b.Champion = _mapper.Map<ChampionView>(_riotService.GetChampionById(ban.ChampionKey));
+                            if (ban.Side == 0)
+                                team1.Bans.Add(_b);
+                            else
+                                team2.Bans.Add(_b);
+                        }
+
+                        m.Teams.Add(team1);
+                        m.Teams.Add(team2);
+                        matches.Add(m);
+                    }
+                }
+            }
+            matches = matches.OrderByDescending(x => x.TimeStamp).ToList();
+            return matches;
+        }
+
+
+
 
         public bool CreateMatch(CreateMatchDTO request)
         {

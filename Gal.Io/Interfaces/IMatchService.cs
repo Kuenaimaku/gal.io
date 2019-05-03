@@ -10,6 +10,8 @@ namespace Gal.Io.Interfaces
     public interface IMatchService
     {
         IEnumerable<MatchView> GetMatches();
+
+        IEnumerable<MatchView> GetMatchesFiltered(MatchFilterDTO filter);
         bool CreateMatch(CreateMatchDTO match);
     }
 }

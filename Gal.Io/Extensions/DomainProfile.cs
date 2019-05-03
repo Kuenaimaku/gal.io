@@ -17,6 +17,7 @@ namespace Gal.Io.Extensions
             CreateMap<Participant, ParticipantView>();
             CreateMap<ChampionBan, ChampionBanView>();
             CreateMap<Player, PlayerView>();
+            CreateMap<Player, PlayerDetailView>();
         }
     }
 }

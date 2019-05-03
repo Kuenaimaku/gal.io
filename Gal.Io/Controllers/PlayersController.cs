@@ -45,6 +45,13 @@ namespace Gal.Io.Controllers
             return Ok(JsonConvert.SerializeObject(response));
         }
 
+        [HttpGet("{id}/detail")]
+        public ActionResult<PlayerDetailView> GetDetailed(Guid id)
+        {
+            var response = _playerService.GetPlayerDetailed(id);
+            return Ok(JsonConvert.SerializeObject(response));
+        }
+
 
         [HttpGet("Validate/{name}")]
         public ActionResult<SummonerDTO> Validate(string name)
