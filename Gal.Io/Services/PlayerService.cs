@@ -129,6 +129,27 @@ namespace Gal.Io.Services
                         response.BestAlly = ba;
                         response.BestAlly.Player.LeagueAccount = _riotService.GetSummonerByName(response.BestAlly.Player.SummonerName);
 
+                        var rival = db.GetRivalStats(playerId).Result.ToList().First();
+                        var ri = new RelatedPlayerView();
+                        ri.Player = _mapper.Map<PlayerView>(db.Players.Where(x => x.PlayerId == rival.PlayerId).First());
+                        ri.Data["Wins"] = rival.Matches.ToString();
+                        response.Rival = ri;
+                        response.Rival.Player.LeagueAccount = _riotService.GetSummonerByName(response.Rival.Player.SummonerName);
+
+                        var _tcs = db.GetTeamCaptainStats(playerId).Result.ToList().FirstOrDefault();
+                        if (_tcs != null && (_tcs.Wins * 100.0 / _tcs.Matches) >= 50.0)
+                            response.PlayerBadges.Add("Captain");
+
+                        var _mvp = db.GetMvpStats(playerId).Result.ToList().FirstOrDefault();
+                        if (_mvp != null && (_mvp.MvpMatches * 100.0 / _mvp.RegularMatches) >= 50.0)
+                            response.PlayerBadges.Add("MVP");
+
+                        var _role = db.GetRoleStats(playerId).Result.ToList().FirstOrDefault();
+                        if (_role != null && (_role.Matches * 100.0 / _role.TotalMatches) >= 50.0)
+                            response.PlayerBadges.Add($"Role-{_role.Role}");
+
+
+
                     }
                 }
                 return response;
