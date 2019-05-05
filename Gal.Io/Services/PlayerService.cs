@@ -121,32 +121,80 @@ namespace Gal.Io.Services
                         response = _mapper.Map<PlayerDetailView>(player);
                         response.LeagueAccount = _riotService.GetSummonerByName(player.SummonerName);
 
-
-                        var r = db.GetBestAlly(playerId).Result.ToList().First();
-                        var ba = new RelatedPlayerView();
-                        ba.Player = _mapper.Map<PlayerView>(db.Players.Where(x=>x.PlayerId == r.PlayerId).First());
-                        ba.Data["Wins"] = r.Wins.ToString();
-                        response.BestAlly = ba;
-                        response.BestAlly.Player.LeagueAccount = _riotService.GetSummonerByName(response.BestAlly.Player.SummonerName);
-
+                        //Get the related player badges
+                        var ally = db.GetBestAlly(playerId).Result.ToList().First();
+                        var allyPlayer = GetPlayer(ally.PlayerId);
+                        var allySummoner = _riotService.GetSummonerByName(allyPlayer.SummonerName);
+                        var allyBadge = new RelationalBadgeView
+                        {
+                            Title = "Friends Forever",
+                            Image1 = $@"http://ddragon.leagueoflegends.com/cdn/9.8.1/img/profileicon/{response.LeagueAccount.ProfileIconId}.png",
+                            Image2 = $@"http://ddragon.leagueoflegends.com/cdn/9.8.1/img/profileicon/{allySummoner.ProfileIconId}.png",
+                            Icon = "heart",
+                            IconType = "is-danger",
+                            PlayerName = player.SummonerName,
+                            RelatedPlayerName = allyPlayer.SummonerName,
+                            RelatedPlayerId = allyPlayer.PlayerId,
+                            Relationship = "the Best of Allies",
+                            Blurb1 = "wins the most when",
+                            Blurb2 = "is on their team."
+                        };
+                        response.RelationalBadges.Add(allyBadge);
                         var rival = db.GetRivalStats(playerId).Result.ToList().First();
-                        var ri = new RelatedPlayerView();
-                        ri.Player = _mapper.Map<PlayerView>(db.Players.Where(x => x.PlayerId == rival.PlayerId).First());
-                        ri.Data["Wins"] = rival.Matches.ToString();
-                        response.Rival = ri;
-                        response.Rival.Player.LeagueAccount = _riotService.GetSummonerByName(response.Rival.Player.SummonerName);
+                        var rivalPlayer = GetPlayer(rival.PlayerId);
+                        var rivalSummoner = _riotService.GetSummonerByName(rivalPlayer.SummonerName);
+                        var rivalBadge = new RelationalBadgeView
+                        {
+                            Title = "It doesn't have to be this way...",
+                            Image1 = $@"http://ddragon.leagueoflegends.com/cdn/9.8.1/img/profileicon/{response.LeagueAccount.ProfileIconId}.png",
+                            Image2 = $@"http://ddragon.leagueoflegends.com/cdn/9.8.1/img/profileicon/{rivalSummoner.ProfileIconId}.png",
+                            Icon = "flash",
+                            IconType = "is-warning",
+                            PlayerName = player.SummonerName,
+                            RelatedPlayerName = rivalPlayer.SummonerName,
+                            RelatedPlayerId = rivalPlayer.PlayerId,
+                            Relationship = "Fated Rivals",
+                            Blurb1 = "always seems to be against",
+                            Blurb2 = ""
+                        };
+                        response.RelationalBadges.Add(rivalBadge);
 
+
+                        //Get the stats required to see if a generic badge is to be rewarded
                         var _tcs = db.GetTeamCaptainStats(playerId).Result.ToList().FirstOrDefault();
                         if (_tcs != null && (_tcs.Wins * 100.0 / _tcs.Matches) >= 50.0)
-                            response.PlayerBadges.Add("Captain");
+                        {
+                            var captain = new CaptainBadge
+                            {
+                                PlayerName = player.SummonerName,
+                                Image1 = $@"http://ddragon.leagueoflegends.com/cdn/9.8.1/img/profileicon/{response.LeagueAccount.ProfileIconId}.png",
+                            };
+                            response.GenericBadges.Add(captain);
+                        }
 
                         var _mvp = db.GetMvpStats(playerId).Result.ToList().FirstOrDefault();
                         if (_mvp != null && (_mvp.MvpMatches * 100.0 / _mvp.RegularMatches) >= 50.0)
-                            response.PlayerBadges.Add("MVP");
-
+                        {
+                            var mvp = new MVPBadge
+                            {
+                                PlayerName = player.SummonerName,
+                                Image1 = $@"http://ddragon.leagueoflegends.com/cdn/9.8.1/img/profileicon/{response.LeagueAccount.ProfileIconId}.png",
+                            };
+                            response.GenericBadges.Add(mvp);
+                            
+                        }
                         var _role = db.GetRoleStats(playerId).Result.ToList().FirstOrDefault();
                         if (_role != null && (_role.Matches * 100.0 / _role.TotalMatches) >= 50.0)
-                            response.PlayerBadges.Add($"Role-{_role.Role}");
+                        {
+                            var role = new RoleBadge
+                            {
+                                PlayerName = player.SummonerName,
+                                Image1 = $@"http://ddragon.leagueoflegends.com/cdn/9.8.1/img/profileicon/{response.LeagueAccount.ProfileIconId}.png",
+                            };
+                            role.Title += _role.Role;
+                            role.Image2 = $@"/assets/role-{_role.Role.ToLower()}.png";
+                            response.GenericBadges.Add(role);
+                        }
 
 
 
